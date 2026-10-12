@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="light">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Ausgaben">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>Ausgaben</title>
+<style>
+:root{--bg:#fff;--card:#e9f0f9;--text:#122033;--muted:#5b6f89;--line:#cfdcec;--accent:#2f6fb8;--on-accent:#fff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:17px/1.35 -apple-system,system-ui,sans-serif;
+  padding:max(16px,env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom))}
+main{max-width:520px;margin:0 auto}
+header{display:flex;justify-content:space-between;align-items:center;margin:8px 0 16px;position:relative}
+h1{font-size:28px;margin:0}
+.mehr{width:44px;height:44px;border-radius:50%;border:0;padding:0;font-size:26px;line-height:1;background:rgba(0,122,255,.12);color:#007aff}
+.menue{position:absolute;right:0;top:54px;z-index:1;min-width:210px;border-radius:14px;overflow:hidden;
+  background:rgba(255,255,255,.88);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);box-shadow:0 8px 30px rgba(0,0,0,.18)}
+.menue[hidden]{display:none}
+.menue button{display:flex;justify-content:space-between;align-items:center;width:100%;background:none;border:0;border-top:.5px solid rgba(60,60,67,.29);text-align:left;font:inherit;color:#000;padding:13px 16px}
+.menue button:first-child{border-top:0}
+.menue button:active{background:rgba(60,60,67,.12)}
+form{background:var(--card);border-radius:16px;padding:16px;display:grid;gap:14px}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px}
+input{text-align:center;width:100%;font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--line);
+  border-radius:12px;padding:12px 14px;-webkit-appearance:none;appearance:none}
+#betrag{font-size:32px;font-weight:600}
+.primary{width:100%;border:0;border-radius:14px;padding:14px;font:inherit;font-weight:600;font-size:18px;background:var(--accent);color:var(--on-accent)}
+#msg{text-align:center;color:var(--muted);min-height:1.4em;margin:12px 0 0}
+#liste{list-style:none;margin:16px 0 0;padding:4px 16px;background:var(--card);border-radius:16px}
+#liste[hidden]{display:none}
+#liste li{display:grid;grid-template-columns:5.2em 1fr auto;gap:10px;align-items:baseline;padding:10px 0;font-size:15px}
+#liste li+li{border-top:1px solid var(--line)}
+#liste .d{color:var(--muted);font-variant-numeric:tabular-nums}
+#liste .s{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#liste .b{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Ausgaben</h1>
+    <button class="mehr" id="mehr" type="button" aria-label="Menü" aria-haspopup="true">⋯</button>
+    <div class="menue" id="menue" hidden>
+      <button id="export" type="button"><span>Exportieren</span><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="M8.5 6.5 12 3l3.5 3.5"/><path d="M8 10H7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-1"/></svg></button>
+      <button type="reset" form="form" id="zurueck"><span>Zurücksetzen</span><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V4.5h6V7"/><path d="M6.5 7l1 13h9l1-13"/><path d="M10 11v6M14 11v6"/></svg></button>
+    </div>
+  </header>
+  <form id="form" autocomplete="off">
+    <div><label for="betrag">Betrag</label><input id="betrag" inputmode="decimal" placeholder="0,00 €" required></div>
+    <div><label for="stelle">Ausgabestelle</label><input id="stelle" required></div>
+    <button class="primary" type="submit">Eintragen</button>
+  </form>
+  <p id="msg"></p>
+  <ul id="liste" hidden></ul>
+</main>
+
+<script>
+(function(){
+  var KEY='ausgaben.eintraege.v1';
+  var $=function(id){return document.getElementById(id)};
+  var pad=function(n){return (n<10?'0':'')+n};
+
+  function laden(){ try{ return JSON.parse(localStorage.getItem(KEY))||[]; }catch(e){ return []; } }
+  var eintraege=laden();
+
+  function zeigeAnzahl(text){ $('msg').textContent=text||(eintraege.length+' Einträge gespeichert'); }
+  zeigeAnzahl();
+
+  function zeigeListe(){
+    var ul=$('liste'); ul.innerHTML='';
+    var neu=eintraege.slice(-10).reverse();
+    ul.hidden=!neu.length;
+    neu.forEach(function(e){
+      var d=new Date(e.ts), li=document.createElement('li');
+      var a=document.createElement('span'); a.className='d'; a.textContent=pad(d.getDate())+'.'+pad(d.getMonth()+1)+'.'+String(d.getFullYear()).slice(2);
+      var b=document.createElement('span'); b.className='s'; b.textContent=e.stelle;
+      var c=document.createElement('span'); c.className='b'; c.textContent=e.betrag.toFixed(2).replace('.',',')+' €';
+      li.appendChild(a); li.appendChild(b); li.appendChild(c); ul.appendChild(li);
+    });
+  }
+  zeigeListe();
+
+  var betragFeld=$('betrag');
+  function zahlLaenge(){ return betragFeld.value.replace(/[^0-9,]/g,'').length; }
+  betragFeld.addEventListener('input',function(){
+    var vor=betragFeld.value.slice(0,betragFeld.selectionStart).replace(/[^0-9,]/g,'').length;
+    var v=betragFeld.value.replace(/[^0-9,]/g,''), k=v.indexOf(',');
+    if(k>-1) v=v.slice(0,k+1)+v.slice(k+1).replace(/,/g,'');
+    v=v.replace(/(,\d{2}).*/,'$1');
+    betragFeld.value=v?v+' €':'';
+    var p=Math.min(vor,v.length); betragFeld.setSelectionRange(p,p);
+  });
+  function vorEinheit(){ setTimeout(function(){ var n=zahlLaenge(); if(betragFeld.selectionStart>n) betragFeld.setSelectionRange(n,n); },0); }
+  betragFeld.addEventListener('focus',vorEinheit);
+  betragFeld.addEventListener('click',vorEinheit);
+
+  $('form').addEventListener('submit',function(ev){
+    ev.preventDefault();
+    var s=$('betrag').value.trim().replace(/\s|€/g,'');
+    if(s.indexOf(',')>-1) s=s.replace(/\./g,'').replace(',','.');
+    var betrag=Math.round(parseFloat(s)*100)/100;
+    if(!(betrag>0)){ zeigeAnzahl('Bitte einen gültigen Betrag eingeben'); return; }
+    eintraege.push({ts:Date.now(),betrag:betrag,stelle:$('stelle').value.trim()});
+    try{ localStorage.setItem(KEY,JSON.stringify(eintraege)); }catch(e){ zeigeAnzahl('Speichern fehlgeschlagen'); return; }
+    $('betrag').value=''; $('stelle').value='';
+    zeigeAnzahl('Eingetragen · '+eintraege.length+' Einträge gespeichert');
+    zeigeListe();
+    $('betrag').focus();
+  });
+
+  function feld(v){ v=String(v==null?'':v); return /[";\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
+  function csv(){
+    var z=['Datum;Uhrzeit;Betrag;Ausgabestelle'];
+    eintraege.forEach(function(e){
+      var d=new Date(e.ts);
+      z.push([pad(d.getDate())+'.'+pad(d.getMonth()+1)+'.'+d.getFullYear(),pad(d.getHours())+':'+pad(d.getMinutes()),
+        e.betrag.toFixed(2).replace('.',','),e.stelle].map(feld).join(';'));
+    });
+    return '﻿'+z.join('\r\n')+'\r\n';
+  }
+  $('export').onclick=function(){
+    if(!eintraege.length){ zeigeAnzahl('Noch nichts zum Exportieren'); return; }
+    var d=new Date(), name='ausgaben_'+d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'.csv';
+    var blob=new Blob([csv()],{type:'text/csv'}), file=new File([blob],name,{type:'text/csv'});
+    navigator.share({files:[file]}).catch(function(){});
+  };
+
+  $('mehr').onclick=function(ev){ ev.stopPropagation(); $('menue').hidden=!$('menue').hidden; };
+  document.addEventListener('click',function(){ $('menue').hidden=true; });
+
+  if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function(){});
+})();
+</script>
+</body>
+</html>

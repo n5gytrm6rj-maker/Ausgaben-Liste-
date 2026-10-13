@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="color-scheme" content="light">
+<meta name="color-scheme" content="light dark">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -10,21 +10,22 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <title>Ausgaben</title>
 <style>
-:root{--bg:#fff;--card:#e9f0f9;--text:#122033;--muted:#5b6f89;--line:#cfdcec;--accent:#2f6fb8;--on-accent:#fff}
+:root{--bg:#fff;--card:#e9f0f9;--text:#122033;--muted:#5b6f89;--line:#cfdcec;--accent:#2f6fb8;--on-accent:#fff;--menu-bg:rgba(255,255,255,.88);--menu-text:#000;--menu-line:rgba(60,60,67,.29);--menu-press:rgba(60,60,67,.12);--dots-bg:rgba(0,122,255,.12);--dots:#007aff;--danger:#ff3b30}
+@media (prefers-color-scheme:dark){:root{--bg:#0c1522;--card:#152234;--text:#e6eefa;--muted:#93a8c4;--line:#27384f;--menu-bg:rgba(44,44,46,.88);--menu-text:#fff;--menu-line:rgba(235,235,245,.2);--menu-press:rgba(235,235,245,.12);--dots-bg:rgba(10,132,255,.22);--dots:#0a84ff;--danger:#ff453a}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font:17px/1.35 -apple-system,system-ui,sans-serif;
   padding:max(16px,env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom))}
 main{max-width:520px;margin:0 auto}
 header{display:flex;justify-content:space-between;align-items:center;margin:8px 0 16px;position:relative}
 h1{font-size:28px;margin:0}
-.mehr{width:44px;height:44px;border-radius:50%;border:0;padding:0;display:flex;align-items:center;justify-content:center;background:rgba(0,122,255,.12);color:#007aff}
+.mehr{width:44px;height:44px;border-radius:50%;border:0;padding:0;display:flex;align-items:center;justify-content:center;background:var(--dots-bg);color:var(--dots)}
 .menue{position:absolute;right:0;top:54px;z-index:1;min-width:210px;border-radius:14px;overflow:hidden;
-  background:rgba(255,255,255,.88);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);box-shadow:0 8px 30px rgba(0,0,0,.18)}
+  background:var(--menu-bg);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);box-shadow:0 8px 30px rgba(0,0,0,.18)}
 .menue[hidden]{display:none}
-.menue button{display:flex;justify-content:space-between;align-items:center;width:100%;background:none;border:0;border-top:.5px solid rgba(60,60,67,.29);text-align:left;font:inherit;color:#000;padding:13px 16px}
+.menue button{display:flex;justify-content:space-between;align-items:center;width:100%;background:none;border:0;border-top:.5px solid var(--menu-line);text-align:left;font:inherit;color:var(--menu-text);padding:13px 16px}
 .menue button:first-child{border-top:0}
-#loeschen{color:#ff3b30}
-.menue button:active{background:rgba(60,60,67,.12)}
+#loeschen{color:var(--danger)}
+.menue button:active{background:var(--menu-press)}
 form{background:var(--card);border-radius:16px;padding:16px;display:grid;gap:14px}
 label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px}
 input{text-align:center;width:100%;font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--line);
